@@ -4,7 +4,6 @@ from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 import json
-import creds
 
 
 def process_data(ti):
