@@ -3,9 +3,14 @@ from airflow import DAG
 from airflow.providers.http.sensors.http import HttpSensor
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
+from airflow.hooks.base import BaseHook
 from airflow.utils.dates import days_ago
 import json
 
+
+def get_rapidapi_key():
+    connection = BaseHook.get_connection('rapidapi_linkedin')
+    return connection.extra_dejson.get('headers').get('x-rapidapi-key')
 
 def process_data(ti):
     data = ti.xcom_pull(task_ids='call_linkedin_api')
@@ -46,8 +51,10 @@ call_linkedin_api = SimpleHttpOperator(
     http_conn_id='rapidapi_linkedin',
     endpoint='/v2/me',
     method='GET',
-    params={"username":"dave-birkbeck"},
-    headers={"x-rapidapi-key": rapidapi_linkedin, "x-rapidapi-host": "linkedin-data-api.p.rapidapi.com"},
+    headers={
+        "x-rapidapi-key": get_rapidapi_key(),
+        "x-rapidapi-host": "linkedin-data-api.p.rapidapi.com"
+    },
     response_filter=lambda response: json.loads(response.text),
     log_response=True,
     dag=dag,
