@@ -26,7 +26,7 @@ default_args = {
 }
 
 dag = DAG(
-    'linkedin_api_to_db',
+    'linkedin_api',
     default_args=default_args,
     description='A DAG to call LinkedIn API via RapidAPI and process the data',
     schedule_interval='@daily',
@@ -69,4 +69,5 @@ process_data_task = PythonOperator(
 )
 
 # Define the task dependencies
-check_api >> call_linkedin_api >> process_data_task
+# check_api >> call_linkedin_api >> process_data_task
+call_linkedin_api
