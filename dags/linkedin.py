@@ -53,7 +53,7 @@ def write_data_to_json(ti):
         processed_data = ti.xcom_pull(task_ids='process_data_task')
         if processed_data is None:
             raise ValueError("No processed data found")
-        output_path = '/opt/airflow/output.json'
+        output_path = '/Users/me/airflow/output.json'
         with open(output_path, 'w') as json_file:
             json.dump(processed_data, json_file)
         logger.info("Data successfully written to %s", output_path)
