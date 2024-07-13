@@ -48,6 +48,19 @@ def call_linkedin_api():
 #         logger.error("Error processing data: %s", e)
 #         raise
 
+def write_data_to_json(ti):
+    try:
+        processed_data = ti.xcom_pull(task_ids='process_data_task')
+        if processed_data is None:
+            raise ValueError("No processed data found")
+        output_path = '/opt/airflow/output.json'
+        with open(output_path, 'w') as json_file:
+            json.dump(processed_data, json_file)
+        logger.info("Data successfully written to %s", output_path)
+    except Exception as e:
+        logger.error("Error writing data to JSON: %s", e)
+        raise
+
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
@@ -79,5 +92,11 @@ call_linkedin_api_task = PythonOperator(
 #     dag=dag,
 # )
 
-# call_linkedin_api_task >> process_data_task
-call_linkedin_api_task
+write_data_to_json_task = PythonOperator(
+    task_id='write_data_to_json_task',
+    python_callable=write_data_to_json,
+    provide_context=True,
+    dag=dag,
+)
+
+call_linkedin_api_task >> write_data_to_json_task
