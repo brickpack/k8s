@@ -55,7 +55,7 @@ call_linkedin_api = SimpleHttpOperator(
         "x-rapidapi-key": get_rapidapi_key(),
         "x-rapidapi-host": "linkedin-data-api.p.rapidapi.com"
     },
-    params={"username":"dave-birkbeck"},
+    data={"username":"dave-birkbeck"},
     response_filter=lambda response: json.loads(response.text),
     log_response=True,
     dag=dag,
@@ -70,5 +70,4 @@ call_linkedin_api = SimpleHttpOperator(
 
 # Define the task dependencies
 # check_api >> call_linkedin_api >> process_data_task
-
 call_linkedin_api
