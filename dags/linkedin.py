@@ -1,73 +1,82 @@
-from datetime import timedelta
 from airflow import DAG
-from airflow.providers.http.sensors.http import HttpSensor
-from airflow.providers.http.operators.http import HttpOperator
 from airflow.operators.python import PythonOperator
-from airflow.hooks.base import BaseHook
 from airflow.utils.dates import days_ago
+from datetime import timedelta
+import requests
+import logging
 import json
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def get_rapidapi_key():
-    connection = BaseHook.get_connection('rapidapi_linkedin')
-    return connection.extra_dejson.get('headers').get('x-rapidapi-key')
+    try:
+        connection = BaseHook.get_connection('rapidapi_linkedin')
+        return connection.extra_dejson.get('headers').get('x-rapidapi-key')
+    except Exception as e:
+        logger.error("Failed to get RapidAPI key: %s", e)
+        raise
+
+def call_linkedin_api():
+    try:
+        url = "https://linkedin-data-api.p.rapidapi.com/"
+        headers = {
+            "x-rapidapi-key": get_rapidapi_key(),
+            "x-rapidapi-host": "linkedin-data-api.p.rapidapi.com"
+        }
+        querystring = {"username":"dave-birkbeck"}
+        response = requests.get(url, headers=headers, params=querystring)
+        response.raise_for_status()  # Raises a HTTPError if the HTTP request returned an unsuccessful status code
+        data = response.json()
+        return data
+    except requests.exceptions.RequestException as e:
+        logger.error("HTTP Request failed: %s", e)
+        raise
 
 # def process_data(ti):
-#     data = ti.xcom_pull(task_ids='call_linkedin_api')
-#     # Process the data here
-#     processed_data = some_processing_function(data)
-#     # Continue with processed_data
-#     ti.xcom_push(key='processed_data', value=processed_data)
+#     try:
+#         data = ti.xcom_pull(task_ids='call_linkedin_api_task')
+#         if data is None:
+#             raise ValueError("No data received from the API call")
+#         # Process the data here
+#         processed_data = some_processing_function(data)
+#         # Continue with processed_data
+#         ti.xcom_push(key='processed_data', value=processed_data)
+#     except Exception as e:
+#         logger.error("Error processing data: %s", e)
+#         raise
 
 default_args = {
     'owner': 'airflow',
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
 }
 
 dag = DAG(
-    'linkedin_api',
+    'linkedin_api_to_db_with_requests',
     default_args=default_args,
-    description='A DAG to call LinkedIn API via RapidAPI and process the data',
+    description='A DAG to call LinkedIn API via RapidAPI using requests and process the data',
     schedule_interval='@daily',
     start_date=days_ago(1),
     catchup=False,
 )
 
-# # Check if the API is available
-# check_api = HttpSensor(
-#     task_id='check_api',
-#     http_conn_id='rapidapi_linkedin',
-#     endpoint='/v2/me',
-#     response_check=lambda response: response.status_code == 200,
-#     poke_interval=5,
-#     timeout=20,
-#     dag=dag,
-# )
-
-# Call the LinkedIn API via RapidAPI
-call_linkedin_api = HttpOperator(
-    task_id='call_linkedin_api',
-    # http_conn_id='rapidapi_linkedin',
-    method='GET',
-    endpoint='get',
-    data={"username": "dave-birkbeck"},
-    headers={
-        "x-rapidapi-key": get_rapidapi_key(),
-        "x-rapidapi-host": "linkedin-data-api.p.rapidapi.com"
-    },
-    response_filter=lambda response: json.loads(response.text),
-    log_response=True,
+call_linkedin_api_task = PythonOperator(
+    task_id='call_linkedin_api_task',
+    python_callable=call_linkedin_api,
     dag=dag,
 )
 
-# # Process the data
 # process_data_task = PythonOperator(
-#     task_id='process_data',
+#     task_id='process_data_task',
 #     python_callable=process_data,
+#     provide_context=True,
 #     dag=dag,
 # )
 
-# Define the task dependencies
-# check_api >> call_linkedin_api >> process_data_task
-call_linkedin_api
+# call_linkedin_api_task >> process_data_task
+call_linkedin_api_task
