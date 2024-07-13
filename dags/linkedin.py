@@ -1,11 +1,13 @@
 from airflow import DAG
 from airflow.hooks.base import BaseHook
 from airflow.operators.python import PythonOperator
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
 from airflow.utils.dates import days_ago
 from datetime import timedelta
 import requests
 import logging
 import json
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
