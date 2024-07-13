@@ -1,7 +1,7 @@
 from datetime import timedelta
 from airflow import DAG
 from airflow.providers.http.sensors.http import HttpSensor
-from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.providers.http.operators.http import HttpOperator
 from airflow.operators.python import PythonOperator
 from airflow.hooks.base import BaseHook
 from airflow.utils.dates import days_ago
@@ -46,16 +46,16 @@ dag = DAG(
 # )
 
 # Call the LinkedIn API via RapidAPI
-call_linkedin_api = SimpleHttpOperator(
+call_linkedin_api = HttpOperator(
     task_id='call_linkedin_api',
-    http_conn_id='rapidapi_linkedin',
-    # endpoint='/v2/me',
+    # http_conn_id='rapidapi_linkedin',
     method='GET',
+    endpoint='get',
+    data={"username": "dave-birkbeck"},
     headers={
         "x-rapidapi-key": get_rapidapi_key(),
         "x-rapidapi-host": "linkedin-data-api.p.rapidapi.com"
     },
-    data={"username":"dave-birkbeck"},
     response_filter=lambda response: json.loads(response.text),
     log_response=True,
     dag=dag,
