@@ -49,7 +49,7 @@ dag = DAG(
 call_linkedin_api = SimpleHttpOperator(
     task_id='call_linkedin_api',
     http_conn_id='rapidapi_linkedin',
-    endpoint='/v2/me',
+    # endpoint='/v2/me',
     method='GET',
     headers={
         "x-rapidapi-key": get_rapidapi_key(),
