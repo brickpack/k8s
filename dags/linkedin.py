@@ -84,7 +84,7 @@ dag = DAG(
 call_linkedin_api_task = PythonOperator(
     task_id='call_linkedin_api_task',
     python_callable=call_linkedin_api,
-    get_logs=True,
+    # get_logs=True,
     dag=dag,
 )
 
@@ -99,7 +99,7 @@ write_data_to_json_task = PythonOperator(
     task_id='write_data_to_json_task',
     python_callable=write_data_to_json,
     provide_context=True,
-    get_logs=True,
+    # get_logs=True,
     dag=dag,
 )
 
