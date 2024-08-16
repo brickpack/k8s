@@ -231,10 +231,10 @@ resource "helm_release" "airflow" {
     value = "5Gi"
   }
 
-  set {
-    name  = "webserver.secret_key"
-    value = var.webserver_secret_key
-  }
+set {
+  name  = "web.secretKey"
+  value = var.webserver_secret_key
+}
 
   timeout = 1200 # 20 minutes
 }
