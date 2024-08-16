@@ -37,6 +37,7 @@ module "airflow" {
   postgres_password      = var.postgres_password
   webserver_password     = var.webserver_password
   fernet_key             = var.fernet_key
+  webserver_secret_key   = var.webserver_secret_key
   namespace              = var.namespace
   airflow_version        = var.airflow_version
   airflow_chart_version  = var.airflow_chart_version

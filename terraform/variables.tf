@@ -87,6 +87,11 @@ variable "create_storage_class" {
   default     = false
 }
 
+variable "webserver_secret_key" {
+  description = "Static secret key for the Airflow webserver"
+  type        = string
+}
+
 variable "grafana_admin_password" {
   description = "Admin password for Grafana"
   type        = string

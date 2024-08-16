@@ -64,3 +64,8 @@ variable "create_storage_class" {
   type        = bool
   default     = false
 }
+
+variable "webserver_secret_key" {
+  description = "Static secret key for the Airflow webserver"
+  type        = string
+}
