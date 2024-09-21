@@ -4,7 +4,7 @@ resource "helm_release" "prometheus" {
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "prometheus"
   namespace  = kubernetes_namespace.monitoring.metadata[0].name
-  version    = "25.26.0"  # Specify the chart version
+  version    = "25.26.0" # Specify the chart version
 
   set {
     name  = "server.persistentVolume.enabled"
@@ -16,7 +16,7 @@ resource "helm_release" "prometheus" {
   }
   set {
     name  = "server.persistentVolume.storageClass"
-    value = "standard"  # Use your desired storage class
+    value = "standard" # Use your desired storage class
   }
 }
 
@@ -27,7 +27,7 @@ resource "helm_release" "loki" {
   repository = "https://grafana.github.io/helm-charts"
   chart      = "loki-stack"
   namespace  = kubernetes_namespace.monitoring.metadata[0].name
-  version    = "2.10.2"  # Specify the chart version
+  version    = "2.10.2" # Specify the chart version
 
   values = [
     <<-EOF
@@ -106,7 +106,7 @@ resource "helm_release" "grafana" {
   repository = "https://grafana.github.io/helm-charts"
   chart      = "grafana"
   namespace  = kubernetes_namespace.monitoring.metadata[0].name
-  version    = "8.4.4"  # Specify the chart version
+  version    = "8.4.4" # Specify the chart version
 
   set {
     name  = "persistence.enabled"
@@ -118,7 +118,7 @@ resource "helm_release" "grafana" {
   }
   set {
     name  = "persistence.storageClassName"
-    value = "standard"  # Use your desired storage class
+    value = "standard" # Use your desired storage class
   }
   set {
     name  = "adminPassword"

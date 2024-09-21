@@ -31,6 +31,11 @@ variable "monitoring_namespace" {
   type        = string
 }
 
+variable "dbt_namespace" {
+  description = "Kubernetes namespace for dbt"
+  type        = string
+}
+
 variable "airflow_version" {
   description = "Airflow version to deploy"
   type        = string
@@ -95,4 +100,22 @@ variable "webserver_secret_key" {
 variable "grafana_admin_password" {
   description = "Admin password for Grafana"
   type        = string
+}
+
+variable "dbt_type" {
+  description = "Kubernetes namespace for dbt"
+  type        = string
+}
+variable "dbt_location" {
+  description = "Kubernetes namespace for dbt"
+  type        = string
+}
+variable "dbt_user" {
+  description = "Kubernetes namespace for dbt"
+  type        = string
+}
+variable "dbt_password" {
+  description = "Kubernetes namespace for dbt"
+  type        = string
+  sensitive   = true
 }

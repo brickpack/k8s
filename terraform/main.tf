@@ -29,23 +29,32 @@ module "postgres" {
 }
 
 module "airflow" {
-  source                 = "./modules/airflow"
-  kube_config_path       = var.kube_config_path
-  git_repo               = var.git_repo
-  git_branch             = var.git_branch
-  postgres_username      = var.postgres_username
-  postgres_password      = var.postgres_password
-  webserver_password     = var.webserver_password
-  fernet_key             = var.fernet_key
-  webserver_secret_key   = var.webserver_secret_key
-  namespace              = var.namespace
-  airflow_version        = var.airflow_version
-  airflow_chart_version  = var.airflow_chart_version
-  airflow_release_name   = var.airflow_release_name
+  source                = "./modules/airflow"
+  kube_config_path      = var.kube_config_path
+  git_repo              = var.git_repo
+  git_branch            = var.git_branch
+  postgres_username     = var.postgres_username
+  postgres_password     = var.postgres_password
+  webserver_password    = var.webserver_password
+  fernet_key            = var.fernet_key
+  webserver_secret_key  = var.webserver_secret_key
+  namespace             = var.namespace
+  airflow_version       = var.airflow_version
+  airflow_chart_version = var.airflow_chart_version
+  airflow_release_name  = var.airflow_release_name
 }
 
 module "monitoring" {
-  source = "./modules/monitoring"
+  source                 = "./modules/monitoring"
   monitoring_namespace   = var.monitoring_namespace
   grafana_admin_password = var.grafana_admin_password
 }
+
+# module "dbt" {
+#   source        = "./modules/dbt"
+#   dbt_namespace = var.dbt_namespace
+#   dbt_type      = var.dbt_type
+#   dbt_location  = var.dbt_location
+#   dbt_user      = var.dbt_user
+#   dbt_password  = var.dbt_password
+# }

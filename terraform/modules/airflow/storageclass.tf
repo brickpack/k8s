@@ -7,7 +7,7 @@ resource "kubernetes_storage_class" "standard" {
 
   storage_provisioner = "kubernetes.io/gce-pd"
   # storage_provisioner = "docker.io/hostpath"  # Change this according to your environment
-  reclaim_policy      = "Retain"
+  reclaim_policy = "Retain"
   parameters = {
     type = "pd-standard"
   }

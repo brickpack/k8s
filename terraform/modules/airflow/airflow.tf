@@ -21,7 +21,7 @@ resource "helm_release" "postgresql" {
 
   set {
     name  = "primary.persistence.enabled"
-    value = "false"  # Disable persistence for testing. Enable it in production.
+    value = "false" # Disable persistence for testing. Enable it in production.
   }
 }
 
@@ -83,25 +83,25 @@ resource "helm_release" "airflow" {
     yamlencode({
       config = {
         core = {
-          fernet_key = var.fernet_key
+          fernet_key               = var.fernet_key
           killed_task_cleanup_time = "60"
-          dagbag_import_timeout = "120"
-          init_retry_delay = "30"
-          max_init_retry = "10"
+          dagbag_import_timeout    = "120"
+          init_retry_delay         = "30"
+          max_init_retry           = "10"
         }
         scheduler = {
           scheduler_zombie_task_threshold = "300"
-          use_row_level_locking = "true"
-          max_threads = "2"
-          min_file_process_interval = "30"
-          dag_dir_list_interval = "60"
-          max_active_runs_per_dag = "16"
-          max_active_tasks_per_dag = "32"
+          use_row_level_locking           = "true"
+          max_threads                     = "2"
+          min_file_process_interval       = "30"
+          dag_dir_list_interval           = "60"
+          max_active_runs_per_dag         = "16"
+          max_active_tasks_per_dag        = "32"
         }
         webserver = {
-          worker_refresh_interval = "120"
+          worker_refresh_interval   = "120"
           worker_refresh_batch_size = "1"
-          secret_key = var.webserver_secret_key
+          secret_key                = var.webserver_secret_key
         }
       }
       postgresql = {
@@ -119,7 +119,7 @@ resource "helm_release" "airflow" {
       }
       web = {
         defaultUser = {
-          create = true
+          create   = true
           username = "admin"
           password = var.webserver_password
         }
@@ -128,15 +128,15 @@ resource "helm_release" "airflow" {
         terminationGracePeriodSeconds = 600
         persistence = {
           enabled = true
-          size = "5Gi"
+          size    = "5Gi"
         }
         resources = {
           limits = {
-            cpu = "2"
+            cpu    = "2"
             memory = "4Gi"
           }
           requests = {
-            cpu = "1"
+            cpu    = "1"
             memory = "2Gi"
           }
         }
@@ -144,7 +144,7 @@ resource "helm_release" "airflow" {
       triggerer = {
         persistence = {
           enabled = true
-          size = "5Gi"
+          size    = "5Gi"
         }
       }
       executor = "KubernetesExecutor"
@@ -177,15 +177,20 @@ resource "helm_release" "airflow" {
       dags = {
         gitSync = {
           enabled = true
-          repo = var.git_repo
-          branch = var.git_branch
+          repo    = var.git_repo
+          branch  = var.git_branch
           subPath = "dags"
-          wait = 60
+          wait    = 60
         }
       }
     })
   ]
 
+  set {
+    name  = "airflow.extraPipPackages"
+    value = "{psycopg2-binary}"
+  }
+  
   set {
     name  = "dags.gitSync.enabled"
     value = "true"
@@ -231,10 +236,10 @@ resource "helm_release" "airflow" {
     value = "5Gi"
   }
 
-set {
-  name  = "web.secretKey"
-  value = var.webserver_secret_key
-}
+  set {
+    name  = "web.secretKey"
+    value = var.webserver_secret_key
+  }
 
   timeout = 1200 # 20 minutes
 }
