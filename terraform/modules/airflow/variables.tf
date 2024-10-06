@@ -24,6 +24,23 @@ variable "airflow_release_name" {
   type        = string
 }
 
+variable "airflow_api_url" {
+  description = "Base URL for Airflow API"
+  type        = string
+}
+
+variable "airflow_username" {
+  description = "Airflow API username"
+  type        = string
+  sensitive   = true
+}
+
+variable "airflow_password" {
+  description = "Airflow API password"
+  type        = string
+  sensitive   = true
+}
+
 variable "fernet_key" {
   description = "Fernet key for Airflow"
   type        = string
@@ -68,4 +85,32 @@ variable "create_storage_class" {
 variable "webserver_secret_key" {
   description = "Static secret key for the Airflow webserver"
   type        = string
+}
+
+variable "pg_user" {
+  type = string
+  sensitive   = true
+}
+
+variable "pg_pass" {
+  type = string
+  sensitive   = true
+}
+
+variable "pg_db" {
+  type = string
+  sensitive   = true
+}
+
+variable "pg_host" {
+  type = string
+  sensitive = true  
+}
+
+variable "conn_type" {
+  type = string  
+}
+
+variable "conn_id" {
+  type = string  
 }

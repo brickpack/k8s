@@ -162,6 +162,10 @@ resource "helm_release" "airflow" {
           value = "10"
         },
         {
+          name  = "AIRFLOW__CORE__TEST_CONNECTION"
+          value = "Enabled"
+        }, 
+        {
           name  = "AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL"
           value = "30"
         },
@@ -186,11 +190,16 @@ resource "helm_release" "airflow" {
     })
   ]
 
+set {
+  name  = "config.webserver.expose_config"
+  value = "true"
+}
+
   set {
     name  = "airflow.extraPipPackages"
     value = "{psycopg2-binary}"
   }
-  
+
   set {
     name  = "dags.gitSync.enabled"
     value = "true"
@@ -240,6 +249,32 @@ resource "helm_release" "airflow" {
     name  = "web.secretKey"
     value = var.webserver_secret_key
   }
+
+  # New section to add the init container to install boto3
+  set {                                                   
+    name  = "extraContainers[0].name"                     
+    value = "install-boto3"                               
+  }                                                       
+
+  set {                                                   
+    name  = "extraContainers[0].image"                    
+    value = "apache/airflow:${var.airflow_version}"       
+  }                                                       
+
+  set {                                                   
+    name  = "extraContainers[0].command[0]"               
+    value = "/bin/sh"                                     
+  }                                                       
+
+  set {                                                   
+    name  = "extraContainers[0].args[0]"                  
+    value = "-c"                                          
+  }                                                       
+
+  set {                                                   
+    name  = "extraContainers[0].args[1]"                  
+    value = "pip install boto3"                           
+  } 
 
   timeout = 1200 # 20 minutes
 }
