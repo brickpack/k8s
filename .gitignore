@@ -173,6 +173,10 @@ creds.py
 .terraform*
 *tfstate*
 *.tfvars
+terraform.tfvars
+
+# Secrets
+secrets.tfvars
 
 # VS Code
 .vscode*
