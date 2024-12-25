@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sql-server.fullname" . }}
+  labels:
+    app: {{ include "sql-server.fullname" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "sql-server.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "sql-server.fullname" . }}
+    spec:
+      containers:
+        - name: sql-server
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 1433
+          env:
+            - name: SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sql-server.fullname" . }}-secret
+                  key: SA_PASSWORD
+            - name: ACCEPT_EULA
+              value: "{{ .Values.env.ACCEPT_EULA }}"
+          volumeMounts:
+            - name: mssql-data
+              mountPath: /var/opt/mssql
+      volumes:
+        - name: mssql-data
+          persistentVolumeClaim:
+            claimName: {{ include "sql-server.fullname" . }}-pvc

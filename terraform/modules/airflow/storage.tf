@@ -10,6 +10,6 @@ resource "kubernetes_persistent_volume_claim" "airflow_logs" {
         storage = "5Gi"
       }
     }
-    storage_class_name = "hostpath"
+    storage_class_name = "standard"  # Changed from "hostpath" to "standard"
   }
 }

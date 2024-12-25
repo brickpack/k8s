@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sql-server.fullname" . }}
+  labels:
+    app: {{ include "sql-server.fullname" . }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 1433
+      protocol: TCP
+      name: sql-server
+  selector:
+    app: {{ include "sql-server.fullname" . }}
