@@ -68,14 +68,6 @@ variable "airflow_password" {
   sensitive   = true
 }
 
-variable "conn_type" {
-  type = string
-}
-
-variable "conn_id" {
-  type = string
-}
-
 variable "fernet_key" {
   description = "Fernet key for Airflow"
   type        = string
@@ -106,7 +98,7 @@ variable "postgres_password" {
 }
 
 variable "webserver_password" {
-  description = "Password for Airflow Weserver"
+  description = "Password for Airflow Webserver"
   type        = string
   sensitive   = true
 }
@@ -120,11 +112,13 @@ variable "create_storage_class" {
 variable "webserver_secret_key" {
   description = "Static secret key for the Airflow webserver"
   type        = string
+  sensitive   = true
 }
 
 variable "grafana_admin_password" {
   description = "Admin password for Grafana"
   type        = string
+  sensitive   = true
 }
 
 variable "smtp_password" {
@@ -133,57 +127,48 @@ variable "smtp_password" {
   sensitive   = true
 }
 
-
-# GitHub Actions Local
-
-variable "github_namespace" {
-  description = "GitHub Actions namespace"
+# SQL Server
+variable "sql_server_namespace" {
+  description = "Namespace to deploy SQL Server into."
   type        = string
+  default     = "sql-server"
 }
 
-variable "github_pat" {
-  description = "GitHub Personal Access Token for Actions Runner"
+variable "sql_helm_release_name" {
+  description = "Release name for the Helm release."
+  type        = string
+  default     = "sql-server"
+}
+
+variable "sql_server_sa_password" {
+  description = "SA password for SQL Server."
   type        = string
   sensitive   = true
 }
 
-variable "github_owner" {
-  description = "GitHub repository owner (user or organization)"
+variable "sql_server_accept_eula" {
+  description = "Accept the SQL Server EULA."
   type        = string
+  default     = "Y"
 }
 
-variable "github_repo" {
-  description = "GitHub repository name"
+variable "sql_server_persistence_size" {
+  description = "Persistent storage size for SQL Server."
   type        = string
+  default     = "8Gi"
 }
 
-variable "runner_replicas" {
-  description = "Number of runner replicas"
-  type        = number
-  default     = 2
+variable "connections" {
+  description = "List of Airflow connections to create"
+  type = list(object({
+    conn_id     = string
+    conn_type   = string
+    description = string
+    host        = string
+    login       = string
+    port        = number
+    schema      = string
+    extra       = optional(map(string))
+    password    = string
+  }))
 }
-
-
-# # DBT
-
-# variable "dbt_namespace" {
-#   description = "Kubernetes namespace for dbt"
-#   type        = string
-# }
-# variable "dbt_type" {
-#   description = "Kubernetes namespace for dbt"
-#   type        = string
-# }
-# variable "dbt_location" {
-#   description = "Kubernetes namespace for dbt"
-#   type        = string
-# }
-# variable "dbt_user" {
-#   description = "Kubernetes namespace for dbt"
-#   type        = string
-# }
-# variable "dbt_password" {
-#   description = "Kubernetes namespace for dbt"
-#   type        = string
-#   sensitive   = true
-# }

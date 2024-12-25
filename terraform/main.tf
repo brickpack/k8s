@@ -2,11 +2,15 @@ terraform {
   required_providers {
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.0"
+      version = "~> 2.14.0"
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 2.0"
+      version = "~> 2.14.0"
+    }
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.0"
     }
   }
 }
@@ -20,6 +24,8 @@ provider "helm" {
     config_path = "~/.kube/config"
   }
 }
+
+provider "http" {}
 
 module "postgres" {
   source  = "./modules/postgres"
@@ -49,8 +55,7 @@ module "airflow" {
   pg_pass               = var.pg_pass
   pg_user               = var.pg_user
   pg_host               = var.pg_host
-  conn_id               = var.conn_id
-  conn_type             = var.conn_type
+  connections           = var.connections
 }
 
 module "monitoring" {
@@ -60,14 +65,24 @@ module "monitoring" {
   smtp_password          = var.smtp_password
 }
 
-module "github_actions_runner" {
-  source              = "./modules/github-actions-runner"
-  github_namespace    = var.github_namespace
-  github_pat          = var.github_pat
-  github_owner        = var.github_owner
-  github_repo         = var.github_repo
-  runner_replicas     = 2
+module "sql_server" {
+  source = "./modules/sql-server"
+
+  sql_server_namespace        = var.sql_server_namespace
+  sql_helm_release_name       = var.sql_helm_release_name
+  sql_server_sa_password      = var.sql_server_sa_password
+  sql_server_accept_eula      = var.sql_server_accept_eula
+  sql_server_persistence_size = var.sql_server_persistence_size
 }
+
+# module "github_actions_runner" {
+#   source              = "./modules/github-actions-runner"
+#   github_namespace    = var.github_namespace
+#   github_pat          = var.github_pat
+#   github_owner        = var.github_owner
+#   github_repo         = var.github_repo
+#   runner_replicas     = 2
+# }
 
 # module "dbt" {
 #   source        = "./modules/dbt"

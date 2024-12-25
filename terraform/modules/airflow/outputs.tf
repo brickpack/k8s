@@ -4,6 +4,6 @@ output "airflow_namespace" {
 }
 
 output "airflow_web_service" {
-  value       = "${helm_release.airflow.name}-webserver"
+  value       = helm_release.airflow.name
   description = "Airflow web service name"
 }

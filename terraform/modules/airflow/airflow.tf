@@ -1,8 +1,8 @@
 resource "helm_release" "postgresql" {
-  name       = "${var.airflow_release_name}-pg"
-  repository = "https://charts.bitnami.com/bitnami"
-  chart      = "postgresql"
-  namespace  = kubernetes_namespace.airflow.metadata[0].name
+  name      = "${var.airflow_release_name}-pg"
+  namespace = kubernetes_namespace.airflow.metadata[0].name
+  chart     = "bitnami/postgresql"
+  version   = "16.3.4"
 
   set {
     name  = "auth.username"
@@ -21,7 +21,7 @@ resource "helm_release" "postgresql" {
 
   set {
     name  = "primary.persistence.enabled"
-    value = "false" # Disable persistence for testing. Enable it in production.
+    value = "false"
   }
 }
 
@@ -32,11 +32,13 @@ resource "kubernetes_job" "airflow_db_init" {
     name      = "${var.airflow_release_name}-db-init"
     namespace = kubernetes_namespace.airflow.metadata[0].name
   }
+
   spec {
     template {
       metadata {
         name = "airflow-db-init"
       }
+
       spec {
         container {
           name    = "airflow-db-init"
@@ -51,9 +53,11 @@ resource "kubernetes_job" "airflow_db_init" {
             value = "LocalExecutor"
           }
         }
+
         restart_policy = "OnFailure"
       }
     }
+
     backoff_limit = 5
   }
 
@@ -140,6 +144,23 @@ resource "helm_release" "airflow" {
             memory = "2Gi"
           }
         }
+        extraVolumes = [{
+          name = "airflow-connections"
+          secret = {
+            secretName = kubernetes_secret.airflow_connections.metadata[0].name
+          }
+        }, {
+          name = "connections-data"
+          emptyDir = {}
+        }]
+        extraVolumeMounts = [{
+          name      = "airflow-connections"
+          mountPath = "/opt/airflow/connections-secret"
+          readOnly  = true
+        }, {
+          name      = "connections-data"
+          mountPath = "/opt/airflow/connections"
+        }]
       }
       triggerer = {
         persistence = {
@@ -164,7 +185,7 @@ resource "helm_release" "airflow" {
         {
           name  = "AIRFLOW__CORE__TEST_CONNECTION"
           value = "Enabled"
-        }, 
+        },
         {
           name  = "AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL"
           value = "30"
@@ -172,6 +193,14 @@ resource "helm_release" "airflow" {
         {
           name  = "AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL"
           value = "60"
+        },
+        {
+          name  = "AIRFLOW__CORE__CONN_CONFIG_FILE"
+          value = "/opt/airflow/connections/connections.json"
+        },
+        {
+          name  = "AIRFLOW__CORE__LOAD_CONNECTIONS_FROM_FILE"
+          value = "true"
         }
       ]
       podAnnotations = {
@@ -187,13 +216,144 @@ resource "helm_release" "airflow" {
           wait    = 60
         }
       }
+      scheduler = {
+        extraVolumeMounts = [{
+          name      = "connections"
+          mountPath = "/opt/airflow/connections"
+          readOnly  = true
+        }]
+        extraVolumes = [{
+          name = "connections"
+          secret = {
+            secretName = kubernetes_secret.airflow_connections.metadata[0].name
+          }
+        }]
+      }
+      webserver = {
+        defaultUser = {
+          enabled = true
+          username = "admin"
+          password = var.webserver_password
+        }
+        service = {
+          type = "LoadBalancer"
+          ports = [{
+            name       = "airflow-ui"
+            port       = 8080
+            targetPort = 8080
+            protocol   = "TCP"
+          }]
+        }
+        extraVolumeMounts = [{
+          name      = "connections"
+          mountPath = "/opt/airflow/connections"
+          readOnly  = true
+        }]
+        extraVolumes = [{
+          name = "connections"
+          secret = {
+            secretName = kubernetes_secret.airflow_connections.metadata[0].name
+          }
+        }]
+      }
+      
+      config = {
+        webserver = {
+          base_url = "http://airflow-webserver.airflow:8080"
+          expose_config = true
+        }
+      }
+
+      ingress = {
+        web = {
+          enabled = true
+          ingressClassName = "nginx"
+          annotations = {
+            "kubernetes.io/ingress.class" = "nginx"
+          }
+          path = "/"
+          pathType = "ImplementationSpecific"
+          hosts = [{
+            name = "airflow-webserver.airflow"
+          }]
+        }
+      }
+
+      initContainers = [{
+        name    = "init-connections"
+        image   = "busybox"
+        command = ["/bin/sh", "-c"]
+        args    = ["cp /connections-readonly/connections.json /connections-readwrite/ && chmod 644 /connections-readwrite/connections.json"]
+        volumeMounts = [
+          {
+            name      = "connections"
+            mountPath = "/connections-readonly"
+            readOnly  = true
+          },
+          {
+            name      = "connections-readwrite"
+            mountPath = "/connections-readwrite"
+          }
+        ]
+      }, {
+        name    = "init-connections"
+        image   = "busybox"
+        command = ["/bin/sh", "-c"]
+        args    = ["cp /opt/airflow/connections-secret/connections.json /opt/airflow/connections/ && chmod 644 /opt/airflow/connections/connections.json"]
+        volumeMounts = [{
+          name      = "airflow-connections"
+          mountPath = "/opt/airflow/connections-secret"
+          readOnly  = true
+        }, {
+          name      = "connections-data"
+          mountPath = "/opt/airflow/connections"
+        }]
+      }, {
+        name    = "init-connections"
+        image   = "busybox"
+        command = ["/bin/sh", "-c"]
+        args    = ["mkdir -p /opt/airflow/connections && cp /connections-secret/connections.json /opt/airflow/connections/ && chmod 644 /opt/airflow/connections/connections.json"]
+        volumeMounts = [
+          {
+            name      = "airflow-connections"
+            mountPath = "/connections-secret"
+            readOnly  = true
+          },
+          {
+            name      = "connections-data"
+            mountPath = "/opt/airflow/connections"
+          }
+        ]
+      }, {
+        name    = "init-connections"
+        image   = "busybox"
+        command = ["/bin/sh", "-c"]
+        args    = ["mkdir -p /opt/airflow/connections && cp /opt/airflow/connections-secret/connections.json /opt/airflow/connections/ && chmod 644 /opt/airflow/connections/connections.json"]
+        volumeMounts = [
+          {
+            name      = "airflow-connections"
+            mountPath = "/opt/airflow/connections-secret"
+            readOnly  = true
+          },
+          {
+            name      = "connections-data"
+            mountPath = "/opt/airflow/connections"
+          }
+        ]
+      }]
     })
   ]
 
-set {
-  name  = "config.webserver.expose_config"
-  value = "true"
-}
+  # Additional configurations
+  set {
+    name  = "config.webserver.expose_config"
+    value = "true"
+  }
+
+  set {
+    name  = "config.api.auth_backends"
+    value = "airflow.providers.fab.auth_manager.api.auth.backend.basic_auth"
+  }
 
   set {
     name  = "airflow.extraPipPackages"
@@ -250,31 +410,31 @@ set {
     value = var.webserver_secret_key
   }
 
-  # New section to add the init container to install boto3
-  set {                                                   
-    name  = "extraContainers[0].name"                     
-    value = "install-boto3"                               
-  }                                                       
+  # Init container for boto3 installation
+  set {
+    name  = "extraContainers[0].name"
+    value = "install-boto3"
+  }
 
-  set {                                                   
-    name  = "extraContainers[0].image"                    
-    value = "apache/airflow:${var.airflow_version}"       
-  }                                                       
+  set {
+    name  = "extraContainers[0].image"
+    value = "apache/airflow:${var.airflow_version}"
+  }
 
-  set {                                                   
-    name  = "extraContainers[0].command[0]"               
-    value = "/bin/sh"                                     
-  }                                                       
+  set {
+    name  = "extraContainers[0].command[0]"
+    value = "/bin/sh"
+  }
 
-  set {                                                   
-    name  = "extraContainers[0].args[0]"                  
-    value = "-c"                                          
-  }                                                       
+  set {
+    name  = "extraContainers[0].args[0]"
+    value = "-c"
+  }
 
-  set {                                                   
-    name  = "extraContainers[0].args[1]"                  
-    value = "pip install boto3"                           
-  } 
+  set {
+    name  = "extraContainers[0].args[1]"
+    value = "pip install boto3"
+  }
 
-  timeout = 1200 # 20 minutes
+  timeout = 1100
 }

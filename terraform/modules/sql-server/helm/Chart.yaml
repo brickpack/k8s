@@ -1,0 +1,5 @@
+apiVersion: v2
+name: sql-server
+description: A Helm chart for Microsoft SQL Server
+version: 0.1.0
+appVersion: "2019"

@@ -71,7 +71,7 @@ variable "postgres_password" {
 }
 
 variable "webserver_password" {
-  description = "Password for Airflow Weserver"
+  description = "Password for Airflow Webserver"
   type        = string
   sensitive   = true
 }
@@ -85,32 +85,44 @@ variable "create_storage_class" {
 variable "webserver_secret_key" {
   description = "Static secret key for the Airflow webserver"
   type        = string
+  sensitive   = true
 }
 
 variable "pg_user" {
-  type = string
+  description = "PostgreSQL user"
+  type        = string
   sensitive   = true
 }
 
 variable "pg_pass" {
-  type = string
+  description = "PostgreSQL password"
+  type        = string
   sensitive   = true
 }
 
 variable "pg_db" {
-  type = string
+  description = "PostgreSQL database"
+  type        = string
   sensitive   = true
 }
 
 variable "pg_host" {
-  type = string
-  sensitive = true  
+  description = "PostgreSQL host"
+  type        = string
+  sensitive   = true
 }
 
-variable "conn_type" {
-  type = string  
-}
-
-variable "conn_id" {
-  type = string  
+variable "connections" {
+  description = "List of Airflow connections to create"
+  type = list(object({
+    conn_id     = string
+    conn_type   = string
+    description = string
+    host        = string
+    login       = string
+    port        = number
+    schema      = string
+    extra       = optional(map(string))
+    password    = string
+  }))
 }
